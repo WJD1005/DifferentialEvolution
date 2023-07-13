@@ -7,23 +7,23 @@ c = 0.1;
 searchRange = [-100, 100];
 
 % 测试参数
-D = [2, 10];  % 测试维度
-NP = [20, 100];  % 种群数（与测试维度对应）
-maxG = 1e5;  % 最大测试代数
+D = 2;  % 测试维度（2/10/20/30/50/100）
+NP = 7.5 * D;  % 种群数
+maxG = 1e3;  % 最大测试代数
 fhd = str2func('cec17_func');  % 调用CEC17标准测试集
-funcNum = 1;  % 测试函数序号
-testNum = 5;  % 测试次数
-realMinVal = 100;  % 真正最小值
+funcNum = 1;  % 测试函数序号（可输入向量）
+realMinVal = funcNum .* 100;  % 真正最小值
 errorRange = 1e-6;  % 达到该误差范围即算作结束
+testNum = 20;  % 测试次数
 
 % 测试结果
-convergenceGen = zeros(length(D), testNum);  % 收敛代数
+convergenceGen = zeros(length(funcNum), testNum);  % 收敛代数
 
 % 多维度测试
-for i = 1 : length(D)
+for i = 1 : length(funcNum)
     % 多次测试
     for j = 1 : testNum
-        [convergenceGen(i, j), trace] = JADE_Test(NP(i), D(i), maxG, p, c, searchRange, fhd, funcNum, realMinVal, errorRange);
+        [convergenceGen(i, j), trace] = JADE_Test(NP, D, maxG, p, c, searchRange, fhd, funcNum(i), realMinVal(i), errorRange);
     end
 end
 

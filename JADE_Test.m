@@ -7,7 +7,7 @@ function [convergenceGen, trace] = JADE_Test(NP, D, maxG, p, c, searchRange, fhd
 % 输出：
 % [convergenceGen, trace]
 % convergenceGen：最小值与真实值误差在误差范围内时的代数，
-% trace：每一代的函数最小值（1*(G+1))。
+% trace：每一代的函数最小值（1*(convergenceGen+1))。
 
 % 初始参数
 uCR = 0.5;
@@ -53,7 +53,7 @@ for g = 1 : maxG
         end
 
         % 取优解
-        pbest = index(randi(p * NP));
+        pbest = index(randi(ceil(p * NP)));  % 采用向上取整
         
         % 取不重复随机解
         r1 = randi(NP);
@@ -111,7 +111,7 @@ for g = 1 : maxG
 
     % 判断是否在误差范围内
     if abs(trace(g + 1) - realMinVal) <= errorRange
-        trace = trace(1, g + 1);  % 截断
+        trace = trace(1 : g + 1);  % 截断
         convergenceGen = g;
         break
     end

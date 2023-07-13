@@ -13,13 +13,14 @@ function [minVal, solution, trace] = DE(NP, D, G, F, CR, searchRange, fhd, funcN
 % 初始种群
 x = rand(D, NP) .* (searchRange(2) - searchRange(1)) + searchRange(1);
 u = zeros(D, NP);
+
 trace = zeros(1, G + 1);  % 储存每代最小值
 trace(1) = min(fhd(x, funcNum));
 
 % 迭代
 for g = 1 : G
     % DE/rand/1/bin
-    for i = 1:NP
+    for i = 1 : NP
         r1 = randi(NP);
         while r1 == i
             r1 = randi(NP);
@@ -32,8 +33,11 @@ for g = 1 : G
         while r3 == i || r3 == r1 || r3 == r2
             r3 = randi(NP);
         end
+
+        % 保证至少交叉一个维度
         jRand = randi(D);
 
+        % 变异交叉
         for j = 1 : D
             if rand() <= CR || j == jRand
                 u(j, i) = x(j, r1) + F * (x(j, r2) - x(j, r3));
@@ -48,13 +52,11 @@ for g = 1 : G
                 u(j, i) = searchRange(2);
             end
         end
-    end
 
-    % 选择
-    xCost = fhd(x, funcNum);
-    uCost = fhd(u, funcNum);
-    for i = 1 : NP
-        if uCost(i) <= xCost(i)
+        % 选择
+        xCost = fhd(x(:, i), funcNum);
+        uCost = fhd(u(:, i), funcNum);
+        if uCost <= xCost
             x(:, i) = u(:, i);
         end
     end
