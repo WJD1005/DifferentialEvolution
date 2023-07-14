@@ -7,11 +7,11 @@ c = 0.1;
 searchRange = [-100, 100];
 
 % 测试参数
-D = 2;  % 测试维度（2/10/20/30/50/100）
+D = 10;  % 测试维度（2/10/20/30/50/100）
 NP = 7.5 * D;  % 种群数
-maxG = 1e3;  % 最大测试代数
+maxG = 1e5;  % 最大测试代数
 fhd = str2func('cec17_func');  % 调用CEC17标准测试集
-funcNum = 1;  % 测试函数序号（可输入向量）
+funcNum = [1, 3 : 30];  % 测试函数序号（可输入向量）
 realMinVal = funcNum .* 100;  % 真正最小值
 errorRange = 1e-6;  % 达到该误差范围即算作结束
 testNum = 20;  % 测试次数
@@ -23,9 +23,12 @@ convergenceGen = zeros(length(funcNum), testNum);  % 收敛代数
 for i = 1 : length(funcNum)
     % 多次测试
     for j = 1 : testNum
-        [convergenceGen(i, j), trace] = JADE_Test(NP, D, maxG, p, c, searchRange, fhd, funcNum(i), realMinVal(i), errorRange);
+        [convergenceGen(i, j), ~] = JADE_Test(NP, D, maxG, p, c, searchRange, fhd, funcNum(i), realMinVal(i), errorRange);
     end
 end
+
+% 保存结果
+save('Result.mat', 'convergenceGen');
 
 
 % 无法收敛时画图观察是代数不够还是收敛于局部最小值
