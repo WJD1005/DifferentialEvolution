@@ -25,6 +25,10 @@ for i = 1 : length(funcNum)
     for j = 1 : testNum
         [convergenceGen(i, j), trace] = DE_Test(NP, D, maxG, F, CR, searchRange, fhd, funcNum(i), realMinVal(i), errorRange);
     end
+
+    % 备份保存
+    backups = convergenceGen(1 : i, :);
+    save('Backups.mat', 'backups');
 end
 
 % 保存结果
