@@ -103,9 +103,11 @@ for g = 1 : maxG
         A(:, randi(size(A, 2))) = [];
     end
 
-    % 更新自适应参数均值
-    uCR = (1 - c) * uCR + c * mean(SCR);
-    uF = (1 - c) * uF + c * (sum(SF .^ 2) / sum(SF));
+    % 集合非空时更新自适应参数均值
+    if ~isempty(SCR)
+        uCR = (1 - c) * uCR + c * mean(SCR);
+        uF = (1 - c) * uF + c * (sum(SF .^ 2) / sum(SF));
+    end
 
     trace(g + 1) = min(fhd(x, funcNum));
 
