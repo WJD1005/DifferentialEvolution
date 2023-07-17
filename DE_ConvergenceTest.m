@@ -2,39 +2,36 @@ clear;
 clc;
 
 % 算法参数
+NP = 100;
 F = 0.5;
 CR = 0.1;
 searchRange = [-100, 100];
 
 % 测试参数
-D = 100;  % 测试维度（2/10/30/50/100）
-NP = 7.5 * D;  % 种群数
-maxG = 1e4;  % 最大测试代数
+D = 30;  % 测试维度（2/10/30/50/100）
+G = 1e4 * D / NP;  % 测试代数
 fhd = str2func('cec17_func');  % 调用CEC17标准测试集
-funcNum = 6;  % 测试函数序号（可输入向量）
+funcNum = [1, 3 : 30];  % 测试函数序号（可输入向量）
 realMinVal = funcNum .* 100;  % 真正最小值
-errorRange = 1;  % 达到该误差范围即算作结束
-testNum = 20;  % 测试次数
+testNum = 51;  % 测试次数
 
-% 测试结果
-convergenceGen = zeros(length(funcNum), testNum);  % 收敛代数
+% 保存设置
+fileName = 'DE.xls';  % 文件名
+rawDataSheetName = sprintf('D%d', D);  % 原始数据工作表名
+statisticalDataSheetName = sprintf('D%dmean&std', D);  % 统计数据工作表名
+
+% 单函数测试结果
+minError = zeros(1, testNum);  % 最小误差
 
 % 多函数测试
 for i = 1 : length(funcNum)
     % 多次测试
     for j = 1 : testNum
-        [convergenceGen(i, j), trace] = DE_Test(NP, D, maxG, F, CR, searchRange, fhd, funcNum(i), realMinVal(i), errorRange);
+        [minError(j), ~] = DE_Test(NP, D, G, F, CR, searchRange, fhd, funcNum(i), realMinVal(i));
     end
 
-    % 备份保存
-    backups = convergenceGen(1 : i, :);
-    save('Backups.mat', 'backups');
+    % 保存结果
+    origin = sprintf('A%d', funcNum(i));  % 数据起始单元格
+    xlswrite(fileName, sort(minError), rawDataSheetName, origin);  % 原始数据
+    xlswrite(fileName, [mean(minError), std(minError)], statisticalDataSheetName, origin);  % 统计数据
 end
-
-% 保存结果
-save('Result.mat', 'convergenceGen');
-
-% 无法收敛时画图观察是代数不够还是收敛于局部最小值
-% plot(trace)
-
-

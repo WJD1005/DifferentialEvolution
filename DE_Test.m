@@ -1,25 +1,24 @@
-function [convergenceGen, trace] = DE_Test(NP, D, maxG, F, CR, searchRange, fhd, funcNum, realMinVal, errorRange)
-%DE_Test DE算法测试函数，用于测试收敛性。
+function [minError, errorTrace] = DE_Test(NP, D, G, F, CR, searchRange, fhd, funcNum, realMinVal)
+%DE_Test DE算法测试函数，用于测试算法性能。
 % 输入：
-% NP：种群数量，D：维度，maxG：最大代数，F：变异系数，CR：交叉系数，
+% NP：种群数量，D：维度，G：代数，F：变异系数，CR：交叉概率，
 % searchRange：搜索范围（1*2），fhd：测试函数句柄，funcNum：测试函数序号，
-% realMinVal：真实最小值，errorRange：误差范围。
+% realMinVal：真实最小值。
 % 输出：
-% [convergenceGen, trace]
-% convergenceGen：最小值与真实值误差在误差范围内时的代数，
-% trace：每一代的函数最小值（1*(convergenceGen+1))。
+% [minError, errorTrace]
+% minError：最小误差值，
+% errorTrace：每一代最小误差值记录（1*(G+1))。
 
 
 % 初始种群
 x = rand(D, NP) .* (searchRange(2) - searchRange(1)) + searchRange(1);
 u = zeros(D, NP);
 
-trace = zeros(1, maxG + 1);  % 储存每代最小值
-trace(1) = min(fhd(x, funcNum));
-convergenceGen = 0;
+errorTrace = zeros(1, G + 1);  % 储存每代最小误差值
+errorTrace(1) = abs(min(fhd(x, funcNum)) - realMinVal);
 
 % 迭代
-for g = 1 : maxG
+for g = 1 : G
     % DE/rand/1/bin
     for i = 1 : NP
         r1 = randi(NP);
@@ -61,14 +60,9 @@ for g = 1 : maxG
             x(:, i) = u(:, i);
         end
     end
-    trace(g + 1) = min(fhd(x, funcNum));
-
-    % 判断是否在误差范围内
-    if abs(trace(g + 1) - realMinVal) <= errorRange
-        trace = trace(1 : g + 1);  % 截断
-        convergenceGen = g;
-        break
-    end
+    errorTrace(g + 1) = abs(min(fhd(x, funcNum)) - realMinVal);
 end
+
+minError = errorTrace(end);
 
 end

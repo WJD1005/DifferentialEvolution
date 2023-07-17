@@ -52,7 +52,7 @@ for g = 1 : G
         end
 
         % 取优解
-        pbest = index(randi(p * NP));
+        pbest = index(randi(max(round(p * NP), 2)));  % 最少取两个
         
         % 取不重复随机解
         r1 = randi(NP);
