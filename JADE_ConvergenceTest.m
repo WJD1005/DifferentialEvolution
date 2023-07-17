@@ -11,9 +11,9 @@ searchRange = [-100, 100];
 D = 30;  % 测试维度（2/10/30/50/100）
 G = 1e4 * D / NP;  % 测试代数
 fhd = str2func('cec17_func');  % 调用CEC17标准测试集
-funcNum = [1, 3];  % 测试函数序号（可输入向量）
+funcNum = [1, 3 : 30];  % 测试函数序号（可输入向量）
 realMinVal = funcNum .* 100;  % 真正最小值
-testNum = 3;  % 测试次数
+testNum = 51;  % 测试次数
 
 % 保存设置
 fileName = 'JADE.xls';  % 文件名
