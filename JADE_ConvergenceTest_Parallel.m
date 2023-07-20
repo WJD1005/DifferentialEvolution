@@ -9,7 +9,7 @@ searchRange = [-100, 100];
 
 % 测试参数
 D = [30, 50];  % 测试维度（2/10/30/50/100，可输入向量）
-G = 1e4 .* D ./ NP;  % 测试代数
+maxFES = 1e4 .* D;  % 最大函数评估次数
 fhd = str2func('cec17_func');  % 调用CEC17标准测试集
 funcNum = [1, 3 : 30];  % 测试函数序号（可输入向量）
 realMinVal = funcNum .* 100;  % 真正最小值
@@ -34,7 +34,7 @@ for i = 1 : length(D)
     for j = 1 : length(funcNum)
         % 多次测试
         parfor k = 1 : testNum
-            [minError(k), ~] = JADE_Test(NP, D(i), G(i), p, c, searchRange, fhd, funcNum(j), realMinVal(j));
+            [minError(k), ~] = JADE_Test(NP, D(i), maxFES(i), p, c, searchRange, fhd, funcNum(j), realMinVal(j));
         end
     
         % 保存结果

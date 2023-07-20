@@ -16,10 +16,11 @@ A = [];  % 动态内存方便一点但运行稍慢
 
 % 初始种群
 x = rand(D, NP) .* (searchRange(2) - searchRange(1)) + searchRange(1);
-u = zeros(D, NP);
+xCost = fhd(x, funcNum);  % 初始成本
+u = zeros(D, 1);  % 储存单个试验个体
 
 trace = zeros(1, G + 1);  % 储存每代最小值
-trace(1) = min(fhd(x, funcNum));
+trace(1) = min(xCost);
 
 
 % 迭代
@@ -28,7 +29,6 @@ for g = 1 : G
     SF = [];
 
     % 计算这一代成本并排序
-    xCost = fhd(x, funcNum);
     [~, index] = sort(xCost);
 
     % P并A
@@ -70,23 +70,22 @@ for g = 1 : G
         % 变异交叉
         for j = 1 : D
             if rand() < CRi || j == jRand
-                u(j, i) = x(j, i) + Fi * (x(j, pbest) - x(j, i)) + Fi * (x(j, r1) - PUA(j, r2));
+                u(j) = x(j, i) + Fi * (x(j, pbest) - x(j, i)) + Fi * (x(j, r1) - PUA(j, r2));
             else
-                u(j, i) = x(j, i);
+                u(j) = x(j, i);
             end
 
             % 越界截断
-            if u(j, i) < searchRange(1)
-                u(j, i) = searchRange(1);
-            elseif u(j, i) > searchRange(2)
-                u(j, i) = searchRange(2);
+            if u(j) < searchRange(1)
+                u(j) = searchRange(1);
+            elseif u(j) > searchRange(2)
+                u(j) = searchRange(2);
             end
         end
         
         % 选择
-        xCost = fhd(x(:, i), funcNum);
-        uCost = fhd(u(:, i), funcNum);
-        if uCost <= xCost
+        uCost = fhd(u, funcNum);
+        if uCost <= xCost(i)
             % 储存失败解
             A(:, end + 1) = x(:, i);
 
@@ -94,7 +93,8 @@ for g = 1 : G
             SCR(end + 1) = CRi;
             SF(end + 1) = Fi;
 
-            x(:, i) = u(:, i);
+            x(:, i) = u;
+            xCost(i) = uCost;
         end
     end
     % 保证A的大小不超过NP
@@ -108,9 +108,10 @@ for g = 1 : G
         uF = (1 - c) * uF + c * (sum(SF .^ 2) / sum(SF));
     end
 
-    trace(g + 1) = min(fhd(x, funcNum));
+    trace(g + 1) = min(xCost);
 end
 
-[minVal, i] = min(fhd(x, funcNum));
+[minVal, i] = min(xCost);
 solution = x(:, i);
+
 end

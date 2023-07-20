@@ -12,10 +12,11 @@ function [minVal, solution, trace] = DE(NP, D, G, F, CR, searchRange, fhd, funcN
 
 % 初始种群
 x = rand(D, NP) .* (searchRange(2) - searchRange(1)) + searchRange(1);
-u = zeros(D, NP);
+xCost = fhd(x, funcNum);  % 初始成本
+u = zeros(D, 1);  % 储存单个试验个体
 
 trace = zeros(1, G + 1);  % 储存每代最小值
-trace(1) = min(fhd(x, funcNum));
+trace(1) = min(xCost);
 
 % 迭代
 for g = 1 : G
@@ -40,29 +41,29 @@ for g = 1 : G
         % 变异交叉
         for j = 1 : D
             if rand() <= CR || j == jRand
-                u(j, i) = x(j, r1) + F * (x(j, r2) - x(j, r3));
+                u(j) = x(j, r1) + F * (x(j, r2) - x(j, r3));
             else
-                u(j, i) = x(j, i);
+                u(j) = x(j, i);
             end
 
             % 越界截断
-            if u(j, i) < searchRange(1)
-                u(j, i) = searchRange(1);
-            elseif u(j, i) > searchRange(2)
-                u(j, i) = searchRange(2);
+            if u(j) < searchRange(1)
+                u(j) = searchRange(1);
+            elseif u(j) > searchRange(2)
+                u(j) = searchRange(2);
             end
         end
 
         % 选择
-        xCost = fhd(x(:, i), funcNum);
-        uCost = fhd(u(:, i), funcNum);
-        if uCost <= xCost
-            x(:, i) = u(:, i);
+        uCost = fhd(u, funcNum);
+        if uCost <= xCost(i)
+            x(:, i) = u;
+            xCost(i) = uCost;
         end
     end
-    trace(g + 1) = min(fhd(x, funcNum));
+    trace(g + 1) = min(xCost);
 end
 
-[minVal, i] = min(fhd(x, funcNum));
+[minVal, i] = min(xCost);
 solution = x(:, i);
 end
