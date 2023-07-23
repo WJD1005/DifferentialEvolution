@@ -42,15 +42,14 @@ for g = 1 : G
         for j = 1 : D
             if rand() <= CR || j == jRand
                 u(j) = x(j, r1) + F * (x(j, r2) - x(j, r3));
+                % 越界调整
+                if u(j) < searchRange(1)
+                    u(j) = (searchRange(1) + x(j, i)) / 2;
+                elseif u(j) > searchRange(2)
+                    u(j) = (searchRange(2) + x(j, i)) / 2;
+                end
             else
                 u(j) = x(j, i);
-            end
-
-            % 越界截断
-            if u(j) < searchRange(1)
-                u(j) = searchRange(1);
-            elseif u(j) > searchRange(2)
-                u(j) = searchRange(2);
             end
         end
 

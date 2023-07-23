@@ -1,5 +1,5 @@
 function [minError, errorTrace] = DE_Test(NP, D, maxFES, F, CR, searchRange, fhd, funcNum, realMinVal)
-%DE_Test DE算法测试函数，用于测试算法性能。
+%DE_TEST DE算法测试函数，用于测试算法性能。
 % 输入：
 % NP：种群数量，D：维度，maxFES：最大函数评估次数，F：变异系数，CR：交叉概率，
 % searchRange：搜索范围（1*2），fhd：测试函数句柄，funcNum：测试函数序号，
@@ -18,7 +18,7 @@ u = zeros(D, 1);  % 储存单个试验个体
 
 G = ceil(maxFES / NP) - 1;  % 最大代数预分配内存
 errorTrace = zeros(1, G + 1);  % 储存每代最小误差值
-errorTrace(1) = abs(min(xCost) - realMinVal);
+errorTrace(1) = min(xCost) - realMinVal;
 
 % 迭代
 g = 1;
@@ -45,15 +45,14 @@ while FES < maxFES
         for j = 1 : D
             if rand() <= CR || j == jRand
                 u(j) = x(j, r1) + F * (x(j, r2) - x(j, r3));
+                % 越界调整
+                if u(j) < searchRange(1)
+                    u(j) = (searchRange(1) + x(j, i)) / 2;
+                elseif u(j) > searchRange(2)
+                    u(j) = (searchRange(2) + x(j, i)) / 2;
+                end
             else
                 u(j) = x(j, i);
-            end
-
-            % 越界截断
-            if u(j) < searchRange(1)
-                u(j) = searchRange(1);
-            elseif u(j) > searchRange(2)
-                u(j) = searchRange(2);
             end
         end
 
@@ -70,7 +69,7 @@ while FES < maxFES
             break
         end
     end
-    errorTrace(g + 1) = abs(min(xCost) - realMinVal);
+    errorTrace(g + 1) = min(xCost) - realMinVal;
     g = g + 1;
 end
 

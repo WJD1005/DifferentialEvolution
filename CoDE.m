@@ -45,6 +45,12 @@ for g = 1 : G
         for j = 1 : D
             if rand() <= CR(parameterIndex) || j == jRand
                 u(j, 1) = x(j, r1) + F(parameterIndex) * (x(j, r2) - x(j, r3));
+                % 越界调整
+                if u(j, 1) < searchRange(1)
+                    u(j, 1) = (searchRange(1) + x(j, i)) / 2;
+                elseif u(j, 1) > searchRange(2)
+                    u(j, 1) = (searchRange(2) + x(j, i)) / 2;
+                end
             else
                 u(j, 1) = x(j, i);
             end
@@ -77,6 +83,12 @@ for g = 1 : G
         for j = 1 : D
             if rand() <= CR(parameterIndex) || j == jRand
                 u(j, 2) = x(j, r1) + rand() * (x(j, r2) - x(j, r3)) + F(parameterIndex) * (x(j, r4) - x(j, r5));  % 第一个F使用[0,1]随机数提高搜索能力
+                % 越界调整
+                if u(j, 2) < searchRange(1)
+                    u(j, 2) = (searchRange(1) + x(j, i)) / 2;
+                elseif u(j, 2) > searchRange(2)
+                    u(j, 2) = (searchRange(2) + x(j, i)) / 2;
+                end
             else
                 u(j, 2) = x(j, i);
             end
@@ -97,10 +109,14 @@ for g = 1 : G
             r3 = randi(NP);
         end
         u(:, 3) = x(:, i) + rand() .* (x(:, r1) - x(:, i)) + F(parameterIndex) .* (x(:, r2) - x(:, r3));
-        
-        % 越界截断
-        u(u < searchRange(1)) = searchRange(1);
-        u(u > searchRange(2)) = searchRange(2);
+        % 越界调整
+        for j = 1 : D
+            if u(j, 3) < searchRange(1)
+                u(j, 3) = (searchRange(1) + x(j, i)) / 2;
+            elseif u(j, 3) > searchRange(2)
+                u(j, 3) = (searchRange(2) + x(j, i)) / 2;
+            end
+        end
 
         % 选择
         uCost = fhd(u, funcNum);

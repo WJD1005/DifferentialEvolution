@@ -21,7 +21,7 @@ u = zeros(D, 3);  % 3列分别储存3种策略生成的试验个体
 
 G = ceil((maxFES - NP) / NP / 3);  % 最大代数预分配内存
 errorTrace = zeros(1, G + 1);  % 储存每代最小误差值
-errorTrace(1) = abs(min(xCost) - realMinVal);
+errorTrace(1) = min(xCost) - realMinVal;
 
 % 迭代
 g = 1;
@@ -46,6 +46,12 @@ while FES < maxFES
         for j = 1 : D
             if rand() <= CR(parameterIndex) || j == jRand
                 u(j, 1) = x(j, r1) + F(parameterIndex) * (x(j, r2) - x(j, r3));
+                % 越界调整
+                if u(j, 1) < searchRange(1)
+                    u(j, 1) = (searchRange(1) + x(j, i)) / 2;
+                elseif u(j, 1) > searchRange(2)
+                    u(j, 1) = (searchRange(2) + x(j, i)) / 2;
+                end
             else
                 u(j, 1) = x(j, i);
             end
@@ -78,6 +84,12 @@ while FES < maxFES
         for j = 1 : D
             if rand() <= CR(parameterIndex) || j == jRand
                 u(j, 2) = x(j, r1) + rand() * (x(j, r2) - x(j, r3)) + F(parameterIndex) * (x(j, r4) - x(j, r5));  % 第一个F使用[0,1]随机数提高搜索能力
+                % 越界调整
+                if u(j, 2) < searchRange(1)
+                    u(j, 2) = (searchRange(1) + x(j, i)) / 2;
+                elseif u(j, 2) > searchRange(2)
+                    u(j, 2) = (searchRange(2) + x(j, i)) / 2;
+                end
             else
                 u(j, 2) = x(j, i);
             end
@@ -98,10 +110,14 @@ while FES < maxFES
             r3 = randi(NP);
         end
         u(:, 3) = x(:, i) + rand() .* (x(:, r1) - x(:, i)) + F(parameterIndex) .* (x(:, r2) - x(:, r3));
-        
-        % 越界截断
-        u(u < searchRange(1)) = searchRange(1);
-        u(u > searchRange(2)) = searchRange(2);
+        % 越界调整
+        for j = 1 : D
+            if u(j, 3) < searchRange(1)
+                u(j, 3) = (searchRange(1) + x(j, i)) / 2;
+            elseif u(j, 3) > searchRange(2)
+                u(j, 3) = (searchRange(2) + x(j, i)) / 2;
+            end
+        end
 
         % 选择
         if maxFES - FES < 3
@@ -123,7 +139,7 @@ while FES < maxFES
             break
         end
     end
-    errorTrace(g + 1) = abs(min(xCost) - realMinVal);
+    errorTrace(g + 1) = min(xCost) - realMinVal;
     g = g + 1;
 end
 

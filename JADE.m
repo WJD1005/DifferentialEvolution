@@ -71,15 +71,14 @@ for g = 1 : G
         for j = 1 : D
             if rand() < CRi || j == jRand
                 u(j) = x(j, i) + Fi * (x(j, pbest) - x(j, i)) + Fi * (x(j, r1) - PUA(j, r2));
+                % 越界调整
+                if u(j) < searchRange(1)
+                    u(j) = (searchRange(1) + x(j, i)) / 2;
+                elseif u(j) > searchRange(2)
+                    u(j) = (searchRange(2) + x(j, i)) / 2;
+                end
             else
                 u(j) = x(j, i);
-            end
-
-            % 越界截断
-            if u(j) < searchRange(1)
-                u(j) = searchRange(1);
-            elseif u(j) > searchRange(2)
-                u(j) = searchRange(2);
             end
         end
         
@@ -98,9 +97,8 @@ for g = 1 : G
         end
     end
     % 保证A的大小不超过NP
-    while size(A, 2) > NP
-        A(:, randi(size(A, 2))) = [];
-    end
+    randomIndex = randperm(size(A, 2));
+    A(:, randomIndex(1 : size(A, 2) - NP)) = [];
 
     % 集合非空时更新自适应参数均值
     if ~isempty(SCR)

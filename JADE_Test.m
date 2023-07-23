@@ -1,5 +1,5 @@
 function [minError, errorTrace] = JADE_Test(NP, D, maxFES, p, c, searchRange, fhd, funcNum, realMinVal)
-%JADE JADE算法测试函数，用于测试算法性能。
+%JADE_TEST JADE算法测试函数，用于测试算法性能。
 % 输入：
 % NP：种群数量，D：维度，maxFES：最大函数评估次数，p：优解比例，c：参数自适应权值，
 % searchRange：搜索范围（1*2），fhd：测试函数句柄，funcNum：测试函数序号，
@@ -22,7 +22,7 @@ u = zeros(D, 1);  % 储存单个试验个体
 
 G = ceil(maxFES / NP) - 1;  % 最大代数预分配内存
 errorTrace = zeros(1, G + 1);  % 储存每代最小误差值
-errorTrace(1) = abs(min(xCost) - realMinVal);
+errorTrace(1) = min(xCost) - realMinVal;
 
 
 % 迭代
@@ -74,15 +74,14 @@ while FES < maxFES
         for j = 1 : D
             if rand() < CRi || j == jRand
                 u(j) = x(j, i) + Fi * (x(j, pbest) - x(j, i)) + Fi * (x(j, r1) - PUA(j, r2));
+                % 越界调整
+                if u(j) < searchRange(1)
+                    u(j) = (searchRange(1) + x(j, i)) / 2;
+                elseif u(j) > searchRange(2)
+                    u(j) = (searchRange(2) + x(j, i)) / 2;
+                end
             else
                 u(j) = x(j, i);
-            end
-
-            % 越界截断
-            if u(j) < searchRange(1)
-                u(j) = searchRange(1);
-            elseif u(j) > searchRange(2)
-                u(j) = searchRange(2);
             end
         end
         
@@ -107,9 +106,8 @@ while FES < maxFES
         end
     end
     % 保证A的大小不超过NP
-    while size(A, 2) > NP
-        A(:, randi(size(A, 2))) = [];
-    end
+    randomIndex = randperm(size(A, 2));
+    A(:, randomIndex(1 : size(A, 2) - NP)) = [];
 
     % 集合非空时更新自适应参数均值
     if ~isempty(SCR)
@@ -117,7 +115,7 @@ while FES < maxFES
         uF = (1 - c) * uF + c * (sum(SF .^ 2) / sum(SF));
     end
 
-    errorTrace(g + 1) = abs(min(xCost) - realMinVal);
+    errorTrace(g + 1) = min(xCost) - realMinVal;
     g = g + 1;
 end
 
