@@ -1,0 +1,45 @@
+clear;
+clc;
+
+% 算法参数
+r_Ninit = 18;  % 间接调初始种群数量
+r_arc = 2.6;  % 间接调次优解集大小
+p = 0.11;
+H = 6;
+searchRange = [-100, 100];
+
+% 测试参数
+D = [30, 50];  % 测试维度（2/10/30/50/100，可输入向量）
+initNP = round(r_Ninit .* D);  % 初始种群数量
+Asize = round(r_arc .* initNP);  % 次优解集大小
+maxFES = 1e4 .* D;  % 最大函数评估次数
+fhd = str2func('cec17_func');  % 调用CEC17标准测试集
+funcNum = [1, 3 : 30];  % 测试函数序号（可输入向量）
+realMinVal = funcNum .* 100;  % 真正最小值
+testNum = 51;  % 测试次数
+
+% 保存设置
+fileName = 'L-SHADE.xls';  % 文件名
+
+% 单函数测试结果
+minError = zeros(1, testNum);  % 最小误差
+
+% 多维度测试
+for i = 1 : length(D)
+    % 定义维度工作表
+    rawDataSheetName = sprintf('D%d', D(i));  % 原始数据工作表名
+    statisticalDataSheetName = sprintf('D%dmean&std', D(i));  % 统计数据工作表名
+    
+    % 多函数测试
+    for j = 1 : length(funcNum)
+        % 多次测试
+        for k = 1 : testNum
+            [minError(k), ~] = LSHADE_Test(initNP(i), D(i), maxFES(i), p, Asize(i), H, searchRange, fhd, funcNum(j), realMinVal(j));
+        end
+    
+        % 保存结果
+        origin = sprintf('A%d', funcNum(j));  % 数据起始单元格
+        xlswrite(fileName, sort(minError), rawDataSheetName, origin);  % 原始数据
+        xlswrite(fileName, [mean(minError), std(minError)], statisticalDataSheetName, origin);  % 统计数据
+    end
+end
