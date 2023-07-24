@@ -10,7 +10,6 @@ JADE_ConvergenceTest_Parallel
 CoDE_ConvergenceTest_Parallel
 SHADE_ConvergenceTest_Parallel
 LSHADE_ConvergenceTest_Parallel
-% jSO_ConvergenceTest_Parallel
 
 toc
 
