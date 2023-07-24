@@ -21,9 +21,9 @@ A = [];  % 动态内存方便一点但运行稍慢
 
 % 初始种群
 x = rand(D, NP) .* (searchRange(2) - searchRange(1)) + searchRange(1);
+u = zeros(D, NP);
 xCost = fhd(x, funcNum);  % 初始成本
 FES = NP;
-u = zeros(D, 1);  % 储存单个试验个体
 
 trace(1) = min(xCost);  % 储存每代最小值
 
@@ -39,28 +39,22 @@ while FES < maxFES
 
     % P并A
     PUA = [x, A];
+
+    % 生成参数
+    r = randi(H, [1, NP]);
+    CR = mCR(r) + 0.1 .* randn(1, NP);
+    CR(mCR(r) == -1) = 0;  % 均值为终止值时CR=0
+    CR = min(CR, 1);  % 截断
+    CR = max(CR, 0);  % 截断
+    F = mF(r) + 0.1 .* tan((rand(1, NP) - 0.5) .* pi);
+    regenIndex = find(F <= 0);
+    while ~isempty(regenIndex)
+        F(regenIndex) = mF(r(regenIndex)) + 0.1 .* tan((rand(1, length(regenIndex)) - 0.5) .* pi);  % 重新生成
+        regenIndex = find(F <= 0);
+    end
+    F = min(F, 1);  % 截断
     
     for i = 1 : NP
-        % 生成参数
-        ri = randi(H);  % 均值索引
-        if mCR(ri) == -1
-            CRi = 0;  % 均值为终止值时CR=0
-        else
-            CRi = normrnd(mCR(ri), 0.1);
-        end
-        if CRi < 0
-            CRi = 0;  % 截断
-        elseif CRi > 1
-            CRi = 1;  % 截断
-        end
-        Fi = mF(ri) + 0.1 * tan((rand() - 0.5) * pi);  % 均匀分布转柯西分布
-        while Fi <= 0
-            Fi = mF(ri) + 0.1 * tan((rand() - 0.5) * pi);  % 重新生成
-        end
-        if Fi > 1
-            Fi = 1;  % 截断
-        end
-        
         % 取优解
         pbest = index(randi(max(round(p * NP), 2)));  % 最少从前2个里取
         
@@ -79,46 +73,48 @@ while FES < maxFES
         
         % 变异交叉
         for j = 1 : D
-            if rand() < CRi || j == jRand
-                u(j) = x(j, i) + Fi * (x(j, pbest) - x(j, i)) + Fi * (x(j, r1) - PUA(j, r2));
+            if rand() <= CR(i) || j == jRand
+                u(j, i) = x(j, i) + F(i) * (x(j, pbest) - x(j, i)) + F(i) * (x(j, r1) - PUA(j, r2));
                 % 越界调整
-                if u(j) < searchRange(1)
-                    u(j) = (searchRange(1) + x(j, i)) / 2;
-                elseif u(j) > searchRange(2)
-                    u(j) = (searchRange(2) + x(j, i)) / 2;
+                if u(j, i) < searchRange(1)
+                    u(j, i) = (searchRange(1) + x(j, i)) / 2;
+                elseif u(j, i) > searchRange(2)
+                    u(j, i) = (searchRange(2) + x(j, i)) / 2;
                 end
             else
-                u(j) = x(j, i);
+                u(j, i) = x(j, i);
             end
-        end
-        
-        % 选择
-        uCost = fhd(u, funcNum);
-        FES = FES + 1;
-        if uCost <= xCost(i)
-            % 避免差为0
-            if uCost < xCost(i)
-                % 储存失败解
-                A(:, end + 1) = x(:, i);
-                % 储存成功参数
-                SCR(end + 1) = CRi;
-                SF(end + 1) = Fi;
-                deltaF(end + 1) = xCost(i) - uCost;  % 储存差值
-            end
-
-            x(:, i) = u;
-            xCost(i) = uCost;
-        end
-
-        % 中途强行跳出
-        if FES == maxFES
-            break
         end
     end
     
+    % 选择
+    if FES + NP <= maxFES
+        uCost = fhd(u, funcNum);
+        goodIndex = uCost <= xCost;
+        realGoodIndex = uCost < xCost;
+        FES = FES + NP;
+    else
+        uCost(1 : maxFES - FES) = fhd(u(:, 1 : maxFES - FES), funcNum);
+        goodIndex = false(1, NP);  % 保证逻辑索引长度
+        realGoodIndex = false(1, NP);  % 保证逻辑索引长度
+        goodIndex(1 : maxFES - FES) = uCost(1 : maxFES - FES) <= xCost(1 : maxFES - FES);
+        realGoodIndex(1 : maxFES - FES) = uCost(1 : maxFES - FES) < xCost(1 : maxFES - FES);
+        FES = maxFES;
+    end
+    % 储存失败解
+    A = [A, x(:, realGoodIndex)];
     % 保证A的大小不超过Asize
-    randomIndex = randperm(size(A, 2));
-    A(:, randomIndex(1 : size(A, 2) - Asize)) = [];
+    if size(A, 2) > Asize
+        randomIndex = randperm(size(A, 2));
+        A = A(:, randomIndex(1 : Asize));
+    end
+    % 储存成功参数
+    SCR = CR(realGoodIndex);
+    SF = F(realGoodIndex);
+    deltaF = xCost(realGoodIndex) - uCost(realGoodIndex);
+    % 取代
+    x(:, goodIndex) = u(:, goodIndex);
+    xCost(goodIndex) = uCost(goodIndex);
 
     % 集合非空时更新自适应参数均值
     if ~isempty(SCR)
@@ -141,7 +137,9 @@ while FES < maxFES
     if nextNP < NP
         [~, index] = sort(xCost, 'descend');  % 降序排序索引
         x(:, index(1 : NP - nextNP)) = [];  % 删除个体
+        u(:, index(1 : NP - nextNP)) = [];
         xCost(index(1 : NP - nextNP)) = [];  % 删除对应的函数值
+        uCost(index(1 : NP - nextNP)) = [];
         NP = nextNP;
     end
 

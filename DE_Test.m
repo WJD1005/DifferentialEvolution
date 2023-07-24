@@ -12,9 +12,10 @@ function [minError, errorTrace] = DE_Test(NP, D, maxFES, F, CR, searchRange, fhd
 
 % 初始种群
 x = rand(D, NP) .* (searchRange(2) - searchRange(1)) + searchRange(1);
+u = zeros(D, NP);
 xCost = fhd(x, funcNum);  % 初始成本
+uCost = zeros(1, NP);
 FES = NP;
-u = zeros(D, 1);  % 储存单个试验个体
 
 G = ceil(maxFES / NP) - 1;  % 最大代数预分配内存
 errorTrace = zeros(1, G + 1);  % 储存每代最小误差值
@@ -44,31 +45,33 @@ while FES < maxFES
         % 变异交叉
         for j = 1 : D
             if rand() <= CR || j == jRand
-                u(j) = x(j, r1) + F * (x(j, r2) - x(j, r3));
+                u(j, i) = x(j, r1) + F * (x(j, r2) - x(j, r3));
                 % 越界调整
-                if u(j) < searchRange(1)
-                    u(j) = (searchRange(1) + x(j, i)) / 2;
-                elseif u(j) > searchRange(2)
-                    u(j) = (searchRange(2) + x(j, i)) / 2;
+                if u(j, i) < searchRange(1)
+                    u(j, i) = (searchRange(1) + x(j, i)) / 2;
+                elseif u(j, i) > searchRange(2)
+                    u(j, i) = (searchRange(2) + x(j, i)) / 2;
                 end
             else
-                u(j) = x(j, i);
+                u(j, i) = x(j, i);
             end
         end
-
-        % 选择
-        uCost = fhd(u, funcNum);
-        FES = FES + 1;
-        if uCost <= xCost(i)
-            x(:, i) = u;
-            xCost(i) = uCost;
-        end
-
-        % 中途强行跳出
-        if FES == maxFES
-            break
-        end
     end
+
+    % 选择
+    if FES + NP <= maxFES
+        uCost = fhd(u, funcNum);
+        goodIndex = uCost <= xCost;
+        FES = FES + NP;
+    else
+        uCost(1 : maxFES - FES) = fhd(u(:, 1 : maxFES - FES), funcNum);
+        goodIndex = false(1, NP);  % 保证逻辑索引长度
+        goodIndex(1 : maxFES - FES) = uCost(1 : maxFES - FES) <= xCost(1 : maxFES - FES);
+        FES = maxFES;
+    end
+    x(:, goodIndex) = u(:, goodIndex);
+    xCost(goodIndex) = uCost(goodIndex);
+
     errorTrace(g + 1) = min(xCost) - realMinVal;
     g = g + 1;
 end

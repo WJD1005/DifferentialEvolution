@@ -16,8 +16,10 @@ CR = [0.1, 0.9, 0.2];
 
 % 初始种群
 x = rand(D, NP) .* (searchRange(2) - searchRange(1)) + searchRange(1);
+u = zeros(D, NP);
+uTemp = zeros(D, 3);  % 暂存三个试验个体
 xCost = fhd(x, funcNum);  % 初始成本
-u = zeros(D, 3);  % 3列分别储存3种策略生成的试验个体
+uCost = zeros(1, NP);
 
 
 trace = zeros(1, G + 1);  % 储存每代最小值
@@ -44,15 +46,15 @@ for g = 1 : G
         % 变异交叉
         for j = 1 : D
             if rand() <= CR(parameterIndex) || j == jRand
-                u(j, 1) = x(j, r1) + F(parameterIndex) * (x(j, r2) - x(j, r3));
+                uTemp(j, 1) = x(j, r1) + F(parameterIndex) * (x(j, r2) - x(j, r3));
                 % 越界调整
-                if u(j, 1) < searchRange(1)
-                    u(j, 1) = (searchRange(1) + x(j, i)) / 2;
-                elseif u(j, 1) > searchRange(2)
-                    u(j, 1) = (searchRange(2) + x(j, i)) / 2;
+                if uTemp(j, 1) < searchRange(1)
+                    uTemp(j, 1) = (searchRange(1) + x(j, i)) / 2;
+                elseif uTemp(j, 1) > searchRange(2)
+                    uTemp(j, 1) = (searchRange(2) + x(j, i)) / 2;
                 end
             else
-                u(j, 1) = x(j, i);
+                uTemp(j, 1) = x(j, i);
             end
         end
 
@@ -82,15 +84,15 @@ for g = 1 : G
         % 变异交叉
         for j = 1 : D
             if rand() <= CR(parameterIndex) || j == jRand
-                u(j, 2) = x(j, r1) + rand() * (x(j, r2) - x(j, r3)) + F(parameterIndex) * (x(j, r4) - x(j, r5));  % 第一个F使用[0,1]随机数提高搜索能力
+                uTemp(j, 2) = x(j, r1) + rand() * (x(j, r2) - x(j, r3)) + F(parameterIndex) * (x(j, r4) - x(j, r5));  % 第一个F使用[0,1]随机数提高搜索能力
                 % 越界调整
-                if u(j, 2) < searchRange(1)
-                    u(j, 2) = (searchRange(1) + x(j, i)) / 2;
-                elseif u(j, 2) > searchRange(2)
-                    u(j, 2) = (searchRange(2) + x(j, i)) / 2;
+                if uTemp(j, 2) < searchRange(1)
+                    uTemp(j, 2) = (searchRange(1) + x(j, i)) / 2;
+                elseif uTemp(j, 2) > searchRange(2)
+                    uTemp(j, 2) = (searchRange(2) + x(j, i)) / 2;
                 end
             else
-                u(j, 2) = x(j, i);
+                uTemp(j, 2) = x(j, i);
             end
         end
 
@@ -108,24 +110,27 @@ for g = 1 : G
         while r3 == i || r3 == r1 || r3 == r2
             r3 = randi(NP);
         end
-        u(:, 3) = x(:, i) + rand() .* (x(:, r1) - x(:, i)) + F(parameterIndex) .* (x(:, r2) - x(:, r3));
+        uTemp(:, 3) = x(:, i) + rand() .* (x(:, r1) - x(:, i)) + F(parameterIndex) .* (x(:, r2) - x(:, r3));
         % 越界调整
         for j = 1 : D
-            if u(j, 3) < searchRange(1)
-                u(j, 3) = (searchRange(1) + x(j, i)) / 2;
-            elseif u(j, 3) > searchRange(2)
-                u(j, 3) = (searchRange(2) + x(j, i)) / 2;
+            if uTemp(j, 3) < searchRange(1)
+                uTemp(j, 3) = (searchRange(1) + x(j, i)) / 2;
+            elseif uTemp(j, 3) > searchRange(2)
+                uTemp(j, 3) = (searchRange(2) + x(j, i)) / 2;
             end
         end
-
-        % 选择
-        uCost = fhd(u, funcNum);
-        [minUCost, index] = min(uCost);  % 取最优策略实验个体
-        if minUCost <= xCost(i)
-            x(:, i) = u(:, index);
-            xCost(i) = minUCost;
-        end
+        
+        % 挑选最优个体
+        uTempCost = fhd(uTemp, funcNum);
+        [uCost(i), minIndex] = min(uTempCost);
+        u(i) = uTemp(:, minIndex);
     end
+
+    % 选择
+    goodIndex = uCost <= xCost;
+    x(:, goodIndex) = u(:, goodIndex);
+    xCost(goodIndex) = uCost(goodIndex);
+
     trace(g + 1) = min(xCost);
 end
 

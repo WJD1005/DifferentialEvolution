@@ -19,8 +19,8 @@ pMin = 2 / NP;  % 确保最少取2个优解
 
 % 初始种群
 x = rand(D, NP) .* (searchRange(2) - searchRange(1)) + searchRange(1);
+u = zeros(D, NP);
 xCost = fhd(x, funcNum);  % 初始成本
-u = zeros(D, 1);  % 储存单个试验个体
 
 trace = zeros(1, G + 1);  % 储存每代最小值
 trace(1) = min(xCost);
@@ -37,27 +37,24 @@ for g = 1 : G
 
     % P并A
     PUA = [x, A];
+
+    % 生成参数
+    r = randi(LP, [1, NP]);
+    CR = mCR(r) + 0.1 .* randn(1, NP);
+    CR = min(CR, 1);  % 截断
+    CR = max(CR, 0);  % 截断
+    F = mF(r) + 0.1 .* tan((rand(1, NP) - 0.5) .* pi);
+    regenIndex = find(F <= 0);
+    while ~isempty(regenIndex)
+        F(regenIndex) = mF(r(regenIndex)) + 0.1 .* tan((rand(1, length(regenIndex)) - 0.5) .* pi);  % 重新生成
+        regenIndex = find(F <= 0);
+    end
+    F = min(F, 1);  % 截断
+    p = pMin + rand(1, NP) .* (0.2 - pMin);  % 优解比例
     
     for i = 1 : NP
-        % 生成参数
-        rpi = randi(LP);  % 均值索引
-        CRi = normrnd(mCR(rpi), 0.1);
-        if CRi < 0
-            CRi = 0;  % 截断
-        elseif CRi > 1
-            CRi = 1;  % 截断
-        end
-        Fi = mF(rpi) + 0.1 * tan((rand() - 0.5) * pi);  % 均匀分布转柯西分布
-        while Fi <= 0
-            Fi = mF(rpi) + 0.1 * tan((rand() - 0.5) * pi);  % 重新生成
-        end
-        if Fi > 1
-            Fi = 1;  % 截断
-        end
-        p = pMin + rand() * (0.2 - pMin);  % 优解比例
-        
         % 取优解
-        pbest = index(randi(round(p * NP)));
+        pbest = index(randi(round(p(i) * NP)));
         
         % 取不重复随机解
         r1 = randi(NP);
@@ -74,39 +71,38 @@ for g = 1 : G
         
         % 变异交叉
         for j = 1 : D
-            if rand() < CRi || j == jRand
-                u(j) = x(j, i) + Fi * (x(j, pbest) - x(j, i)) + Fi * (x(j, r1) - PUA(j, r2));
+            if rand() <= CR(i) || j == jRand
+                u(j, i) = x(j, i) + F(i) * (x(j, pbest) - x(j, i)) + F(i) * (x(j, r1) - PUA(j, r2));
                 % 越界调整
-                if u(j) < searchRange(1)
-                    u(j) = (searchRange(1) + x(j, i)) / 2;
-                elseif u(j) > searchRange(2)
-                    u(j) = (searchRange(2) + x(j, i)) / 2;
+                if u(j, i) < searchRange(1)
+                    u(j, i) = (searchRange(1) + x(j, i)) / 2;
+                elseif u(j, i) > searchRange(2)
+                    u(j, i) = (searchRange(2) + x(j, i)) / 2;
                 end
             else
-                u(j) = x(j, i);
+                u(j, i) = x(j, i);
             end
-        end
-        
-        % 选择
-        uCost = fhd(u, funcNum);
-        if uCost <= xCost(i)
-            % 避免差为0
-            if uCost < xCost(i)
-                % 储存失败解
-                A(:, end + 1) = x(:, i);
-                % 储存成功参数
-                SCR(end + 1) = CRi;
-                SF(end + 1) = Fi;
-                deltaF(end + 1) = xCost(i) - uCost;  % 储存差值
-            end
-
-            x(:, i) = u;
-            xCost(i) = uCost;
         end
     end
+
+    % 选择
+    uCost = fhd(u, funcNum);
+    goodIndex = uCost <= xCost;
+    realGoodIndex = uCost < xCost;
+    % 储存失败解
+    A = [A, x(:, realGoodIndex)];
     % 保证A的大小不超过NP
-    randomIndex = randperm(size(A, 2));
-    A(:, randomIndex(1 : size(A, 2) - NP)) = [];
+    if size(A, 2) > NP
+        randomIndex = randperm(size(A, 2));
+        A = A(:, randomIndex(1 : NP));
+    end
+    % 储存成功参数
+    SCR = CR(realGoodIndex);
+    SF = F(realGoodIndex);
+    deltaF = xCost(realGoodIndex) - uCost(realGoodIndex);
+    % 取代
+    x(:, goodIndex) = u(:, goodIndex);
+    xCost(goodIndex) = uCost(goodIndex);
 
     % 集合非空时更新自适应参数均值
     if ~isempty(SCR)

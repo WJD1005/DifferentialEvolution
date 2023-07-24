@@ -22,7 +22,7 @@ fileName = 'DE.xls';  % 文件名
 minError = zeros(1, testNum);  % 最小误差
 
 % 开启并行计算环境
-par = parpool;  % 自动分配核心数
+% par = parpool;  % 自动分配核心数
 
 % 多维度测试
 for i = 1 : length(D)
@@ -45,4 +45,4 @@ for i = 1 : length(D)
 end
 
 % 关闭并行计算环境
-delete(par);
+% delete(par);

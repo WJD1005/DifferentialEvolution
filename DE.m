@@ -12,8 +12,8 @@ function [minVal, solution, trace] = DE(NP, D, G, F, CR, searchRange, fhd, funcN
 
 % 初始种群
 x = rand(D, NP) .* (searchRange(2) - searchRange(1)) + searchRange(1);
+u = zeros(D, NP);
 xCost = fhd(x, funcNum);  % 初始成本
-u = zeros(D, 1);  % 储存单个试验个体
 
 trace = zeros(1, G + 1);  % 储存每代最小值
 trace(1) = min(xCost);
@@ -41,25 +41,25 @@ for g = 1 : G
         % 变异交叉
         for j = 1 : D
             if rand() <= CR || j == jRand
-                u(j) = x(j, r1) + F * (x(j, r2) - x(j, r3));
+                u(j, i) = x(j, r1) + F * (x(j, r2) - x(j, r3));
                 % 越界调整
-                if u(j) < searchRange(1)
-                    u(j) = (searchRange(1) + x(j, i)) / 2;
-                elseif u(j) > searchRange(2)
-                    u(j) = (searchRange(2) + x(j, i)) / 2;
+                if u(j, i) < searchRange(1)
+                    u(j, i) = (searchRange(1) + x(j, i)) / 2;
+                elseif u(j, i) > searchRange(2)
+                    u(j, i) = (searchRange(2) + x(j, i)) / 2;
                 end
             else
-                u(j) = x(j, i);
+                u(j, i) = x(j, i);
             end
         end
-
-        % 选择
-        uCost = fhd(u, funcNum);
-        if uCost <= xCost(i)
-            x(:, i) = u;
-            xCost(i) = uCost;
-        end
     end
+
+    % 选择
+    uCost = fhd(u, funcNum);
+    goodIndex = uCost <= xCost;
+    x(:, goodIndex) = u(:, goodIndex);
+    xCost(goodIndex) = uCost(goodIndex);
+
     trace(g + 1) = min(xCost);
 end
 
