@@ -2,8 +2,8 @@ clear
 clc
 
 % B compares with A
-A = 'L-SHADE';
-B = ["DE", "JADE", "CoDE", "SHADE"];
+A = 'jSO';
+B = ["DE", "JADE", "CoDE", "SHADE", "L-SHADE"];
 D = [30, 50];
 funcNum = [1, 3 : 30];
 
