@@ -22,17 +22,11 @@ trace(1) = min(xCost);
 for g = 1 : G
     % DE/rand/1/bin
     for i = 1 : NP
-        r1 = randi(NP);
-        while r1 == i
-            r1 = randi(NP);
-        end
-        r2 = randi(NP);
-        while r2 == i || r2 == r1
-            r2 = randi(NP);
-        end
-        r3 = randi(NP);
-        while r3 == i || r3 == r1 || r3 == r2
-            r3 = randi(NP);
+        r = randperm(NP, 3);
+        regenIndex = find(r == i);
+        while ~isempty(regenIndex)
+            r(regenIndex) = randi(NP, [1, length(regenIndex)]);
+            regenIndex = find(r == i);
         end
 
         % 保证至少交叉一个维度
@@ -41,7 +35,7 @@ for g = 1 : G
         % 变异交叉
         for j = 1 : D
             if rand() <= CR || j == jRand
-                u(j, i) = x(j, r1) + F * (x(j, r2) - x(j, r3));
+                u(j, i) = x(j, r(1)) + F * (x(j, r(2)) - x(j, r(3)));
                 % 越界调整
                 if u(j, i) < searchRange(1)
                     u(j, i) = (searchRange(1) + x(j, i)) / 2;

@@ -30,23 +30,17 @@ for g = 1 : G
     for i = 1 : NP
         % DE/rand/1/bin
         parameterIndex = randi(3);  % 选择参数组合
-        r1 = randi(NP);
-        while r1 == i
-            r1 = randi(NP);
-        end
-        r2 = randi(NP);
-        while r2 == i || r2 == r1
-            r2 = randi(NP);
-        end
-        r3 = randi(NP);
-        while r3 == i || r3 == r1 || r3 == r2
-            r3 = randi(NP);
+        r = randperm(NP, 3);
+        regenIndex = find(r == i);
+        while ~isempty(regenIndex)
+            r(regenIndex) = randi(NP, [1, length(regenIndex)]);
+            regenIndex = find(r == i);
         end
         jRand = randi(D);
         % 变异交叉
         for j = 1 : D
             if rand() <= CR(parameterIndex) || j == jRand
-                uTemp(j, 1) = x(j, r1) + F(parameterIndex) * (x(j, r2) - x(j, r3));
+                uTemp(j, 1) = x(j, r(1)) + F(parameterIndex) * (x(j, r(2)) - x(j, r(3)));
                 % 越界调整
                 if uTemp(j, 1) < searchRange(1)
                     uTemp(j, 1) = (searchRange(1) + x(j, i)) / 2;
@@ -60,31 +54,17 @@ for g = 1 : G
 
         % DE/rand/2/bin
         parameterIndex = randi(3);  % 选择参数组合
-        r1 = randi(NP);
-        while r1 == i
-            r1 = randi(NP);
-        end
-        r2 = randi(NP);
-        while r2 == i || r2 == r1
-            r2 = randi(NP);
-        end
-        r3 = randi(NP);
-        while r3 == i || r3 == r1 || r3 == r2
-            r3 = randi(NP);
-        end
-        r4 = randi(NP);
-        while r4 == i || r4 == r1 || r4 == r2 || r4 == r3
-            r4 = randi(NP);
-        end
-        r5 = randi(NP);
-        while r5 == i || r5 == r1 || r5 == r2 || r5 == r3 || r5 == r4
-            r5 = randi(NP);
+        r = randperm(NP, 5);
+        regenIndex = find(r == i);
+        while ~isempty(regenIndex)
+            r(regenIndex) = randi(NP, [1, length(regenIndex)]);
+            regenIndex = find(r == i);
         end
         jRand = randi(D);
         % 变异交叉
         for j = 1 : D
             if rand() <= CR(parameterIndex) || j == jRand
-                uTemp(j, 2) = x(j, r1) + rand() * (x(j, r2) - x(j, r3)) + F(parameterIndex) * (x(j, r4) - x(j, r5));  % 第一个F使用[0,1]随机数提高搜索能力
+                uTemp(j, 2) = x(j, r(1)) + rand() * (x(j, r(2)) - x(j, r(3))) + F(parameterIndex) * (x(j, r(4)) - x(j, r(5)));  % 第一个F使用[0,1]随机数提高搜索能力
                 % 越界调整
                 if uTemp(j, 2) < searchRange(1)
                     uTemp(j, 2) = (searchRange(1) + x(j, i)) / 2;
@@ -98,19 +78,13 @@ for g = 1 : G
 
         % DE/current-to-rand/1
         parameterIndex = randi(3);  % 选择参数组合
-        r1 = randi(NP);
-        while r1 == i
-            r1 = randi(NP);
+        r = randperm(NP, 3);
+        regenIndex = find(r == i);
+        while ~isempty(regenIndex)
+            r(regenIndex) = randi(NP, [1, length(regenIndex)]);
+            regenIndex = find(r == i);
         end
-        r2 = randi(NP);
-        while r2 == i || r2 == r1
-            r2 = randi(NP);
-        end
-        r3 = randi(NP);
-        while r3 == i || r3 == r1 || r3 == r2
-            r3 = randi(NP);
-        end
-        uTemp(:, 3) = x(:, i) + rand() .* (x(:, r1) - x(:, i)) + F(parameterIndex) .* (x(:, r2) - x(:, r3));
+        uTemp(:, 3) = x(:, i) + rand() .* (x(:, r(1)) - x(:, i)) + F(parameterIndex) .* (x(:, r(2)) - x(:, r(3)));
         % 越界调整
         for j = 1 : D
             if uTemp(j, 3) < searchRange(1)

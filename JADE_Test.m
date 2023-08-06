@@ -98,8 +98,8 @@ while FES < maxFES
     A = [A, x(:, goodIndex)];
     % 保证A的大小不超过NP
     if size(A, 2) > NP
-        randomIndex = randperm(size(A, 2));
-        A = A(:, randomIndex(1 : NP));
+        randomIndex = randperm(size(A, 2), NP);
+        A = A(:, randomIndex);
     end
     % 储存成功参数
     SCR = CR(goodIndex);
