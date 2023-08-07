@@ -23,10 +23,9 @@ for g = 1 : G
     % DE/rand/1/bin
     for i = 1 : NP
         r = randperm(NP, 3);
-        regenIndex = find(r == i);
-        while ~isempty(regenIndex)
-            r(regenIndex) = randi(NP, [1, length(regenIndex)]);
-            regenIndex = find(r == i);
+        regenIndex = r == i;  % 只可能有1个等于i
+        while r(regenIndex) == i
+            r(regenIndex) = randi(NP);
         end
 
         % 保证至少交叉一个维度

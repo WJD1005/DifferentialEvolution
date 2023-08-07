@@ -31,10 +31,9 @@ for g = 1 : G
         % DE/rand/1/bin
         parameterIndex = randi(3);  % 选择参数组合
         r = randperm(NP, 3);
-        regenIndex = find(r == i);
-        while ~isempty(regenIndex)
-            r(regenIndex) = randi(NP, [1, length(regenIndex)]);
-            regenIndex = find(r == i);
+        regenIndex = r == i;  % 只可能有1个等于i
+        while r(regenIndex) == i
+            r(regenIndex) = randi(NP);
         end
         jRand = randi(D);
         % 变异交叉
@@ -55,10 +54,9 @@ for g = 1 : G
         % DE/rand/2/bin
         parameterIndex = randi(3);  % 选择参数组合
         r = randperm(NP, 5);
-        regenIndex = find(r == i);
-        while ~isempty(regenIndex)
-            r(regenIndex) = randi(NP, [1, length(regenIndex)]);
-            regenIndex = find(r == i);
+        regenIndex = r == i;  % 只可能有1个等于i
+        while r(regenIndex) == i
+            r(regenIndex) = randi(NP);
         end
         jRand = randi(D);
         % 变异交叉
@@ -79,10 +77,9 @@ for g = 1 : G
         % DE/current-to-rand/1
         parameterIndex = randi(3);  % 选择参数组合
         r = randperm(NP, 3);
-        regenIndex = find(r == i);
-        while ~isempty(regenIndex)
-            r(regenIndex) = randi(NP, [1, length(regenIndex)]);
-            regenIndex = find(r == i);
+        regenIndex = r == i;  % 只可能有1个等于i
+        while r(regenIndex) == i
+            r(regenIndex) = randi(NP);
         end
         uTemp(:, 3) = x(:, i) + rand() .* (x(:, r(1)) - x(:, i)) + F(parameterIndex) .* (x(:, r(2)) - x(:, r(3)));
         % 越界调整
